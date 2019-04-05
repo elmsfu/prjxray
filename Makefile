@@ -1,22 +1,25 @@
 ALL_EXCLUDE = third_party .git env build
 
 # Tools + Environment
-IN_ENV = if [ -e env/bin/activate ]; then . env/bin/activate; fi;
+QUIET = @
+ECHO = $(QUIET)echo
+IN_ENV = $(QUIET) if [ -e env/bin/activate ]; then . env/bin/activate; fi;
+
 env:
 	virtualenv --python=python3 env
-	# Install prjxray
-	ln -sf $(PWD)/prjxray env/lib/python3.*/site-packages/
-	$(IN_ENV) python -c "import prjxray"
-	# Install fasm from third_party
-	$(IN_ENV) pip install --upgrade -e third_party/fasm
-	# Install project dependencies
-	$(IN_ENV) pip install -r requirements.txt
-	# Install project's documentation dependencies
-	$(IN_ENV) pip install -r docs/requirements.txt
-	# Check fasm library was installed
+	$(ECHO) "Install fasm from third_party"
+	$(IN_ENV) cd third_party/fasm/ && python setup.py develop
+	$(ECHO) "Check fasm library was installed"
 	$(IN_ENV) python -c "import fasm"
 	$(IN_ENV) python -c "import fasm.output"
-	# Check YAML is installed
+
+	$(ECHO) "Install prjxray"
+	$(IN_ENV) python setup.py develop
+	$(IN_ENV) python -c "import prjxray"
+
+	$(ECHO) "Install project's documentation dependencies"
+	$(IN_ENV) pip install -r docs/requirements.txt
+	$(ECHO) "Check YAML is installed"
 	$(IN_ENV) python -c "import yaml" || (echo "Unable to find python-yaml" && exit 1)
 
 build:
